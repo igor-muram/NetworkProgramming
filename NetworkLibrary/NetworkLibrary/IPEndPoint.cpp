@@ -48,6 +48,20 @@ namespace Net
 
 	}
 
+	IPEndPoint::IPEndPoint(sockaddr* addr)
+	{
+		assert(addr->sa_family == AF_INET);
+
+		sockaddr_in *addrv4 = reinterpret_cast<sockaddr_in*>(addr);
+		ipversion = IPVersion::IPv4;
+		port = ntohs(addrv4->sin_port);
+		ip_bytes.resize(sizeof(ULONG));
+		memcpy(&ip_bytes[0], &addrv4->sin_addr, sizeof(ULONG));
+		ip_string.resize(16);
+		inet_ntop(AF_INET, &addrv4->sin_addr, &ip_string[0], 16);
+		hostname = ip_string;
+	}
+
 	IPVersion Net::IPEndPoint::GetIPVersion()
 	{
 		return ipversion;
@@ -83,5 +97,29 @@ namespace Net
 		addr.sin_port = htons(port);
 
 		return addr;
+	}
+
+	void IPEndPoint::Print()
+	{
+		switch (ipversion)
+		{
+		case IPVersion::IPv4:
+			std::cout << "IP Version: IPv4" << std::endl;
+			break;
+		case IPVersion::IPv6:
+			std::cout << "IP Version: IPv6" << std::endl;
+			break;
+		default:
+			std::cout << "IP Version: Unknown" << std::endl;
+		}
+
+		std::cout << "Hostname: " << hostname << std::endl;
+		std::cout << "IP: " << ip_string << std::endl;
+		std::cout << "Port: " << port << std::endl;
+		std::cout << "IP bytes..." << std::endl;
+		for (auto& digit : ip_bytes)
+		{
+			std::cout << (int)digit << std::endl;
+		}
 	}
 }

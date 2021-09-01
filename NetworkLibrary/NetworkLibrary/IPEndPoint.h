@@ -1,4 +1,5 @@
 #pragma once
+#include <iostream>
 #include <string>
 #include <vector>
 #include <assert.h>
@@ -11,12 +12,14 @@ namespace Net
 	{
 	public:
 		IPEndPoint(const char* ip, unsigned short port);
+		IPEndPoint(sockaddr* addr);
 		IPVersion GetIPVersion();
 		std::vector<uint8_t> GetIPBytes();
 		std::string GetHostname();
 		std::string GetIPString();
 		unsigned short GetPort();
 		sockaddr_in GetSockaddrIPv4();
+		void Print();
 
 	private:
 		IPVersion ipversion = IPVersion::Unknown;

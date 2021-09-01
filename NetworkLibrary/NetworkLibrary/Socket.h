@@ -1,4 +1,5 @@
 #pragma once
+#include <iostream>
 #include <assert.h>
 #include "SocketHandle.h"
 #include "Result.h"
@@ -16,6 +17,10 @@ namespace Net
 		Result Close();
 		Result Bind(IPEndPoint endpoint);
 		Result Listen(IPEndPoint endpoint, int backlog = 5);
+		Result Accept(Socket &outSocket);
+		Result Connect(IPEndPoint endpoint);
+		Result Send(void* data, int numberOfBytes, int& bytesSent);
+		Result Recv(void* destination, int numberOfBytes, int& bytesReceived);
 		SocketHandle GetHandle();
 		IPVersion GetIPVersion();
 

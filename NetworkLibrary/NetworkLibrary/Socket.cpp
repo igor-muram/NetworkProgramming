@@ -75,6 +75,69 @@ namespace Net
 		return Result::Success;
 	}
 
+	Result Socket::Accept(Socket& outSocket)
+	{
+		sockaddr_in addr = {};
+		int len = sizeof(sockaddr_in);
+
+		SocketHandle acceptedConnectionHandle = accept(handle, reinterpret_cast<sockaddr*>(&addr), &len);
+		if (acceptedConnectionHandle == INVALID_SOCKET)
+		{
+			int error = WSAGetLastError();
+			return Result::NotYetImplemented;
+		}
+		IPEndPoint newConnectionEndPoint(reinterpret_cast<sockaddr*>(&addr));
+		std::cout << "New connection accepted!" << std::endl;
+		newConnectionEndPoint.Print();
+
+		outSocket = Socket(IPVersion::IPv4, acceptedConnectionHandle);
+		return Result::Success;
+	}
+
+	Result Socket::Connect(IPEndPoint endpoint)
+	{
+		sockaddr_in addr = endpoint.GetSockaddrIPv4();
+
+		int result = connect(handle, reinterpret_cast<sockaddr*>(&addr), sizeof(sockaddr_in));
+
+		if (result != 0)
+		{
+			int error = WSAGetLastError();
+			return Result::NotYetImplemented;
+		}
+
+		return Result::Success;
+	}
+
+	Result Socket::Send(void* data, int numberOfBytes, int& bytesSent)
+	{
+		bytesSent = send(handle, reinterpret_cast<const char*>(data), numberOfBytes, NULL);
+
+		if (bytesSent == SOCKET_ERROR)
+		{
+			int error = WSAGetLastError();
+			return Result::NotYetImplemented;
+		}
+
+		return Result::Success;
+	}
+
+	Result Socket::Recv(void* destination, int numberOfBytes, int& bytesReceived)
+	{
+		bytesReceived = recv(handle, reinterpret_cast<char*>(destination), numberOfBytes, NULL);
+
+		if (bytesReceived == 0)
+			return Result::NotYetImplemented;
+
+		if (bytesReceived == SOCKET_ERROR)
+		{
+			int error = WSAGetLastError();
+			return Result::NotYetImplemented;
+		}
+
+		return Result::Success;
+	}
+
 	SocketHandle Net::Socket::GetHandle()
 	{
 		return handle;
