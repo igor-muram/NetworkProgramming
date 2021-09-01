@@ -20,7 +20,7 @@ struct Client
 
 	bool operator==(Client client)
 	{
-		return ID = client.ID;
+		return ID == client.ID;
 	}
 };
 
@@ -33,40 +33,46 @@ void HandleClient(Client client);
 int main()
 {
 	WSAData wsaData;
-	int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
-	if (result != 0)
+	if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
 		HandleError("Failed to initialize library.");
 
 	SOCKET listenSock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if (listenSock == INVALID_SOCKET)
 		HandleError("Failed to create socket.");
 
-	sockaddr addr = CreateAddress("192.168.0.11", 4790);
+	sockaddr addr = CreateAddress("127.0.0.1", 4790);
 
-	result = bind(listenSock, &addr, sizeof(sockaddr));
-	if (result != 0)
+	if (bind(listenSock, &addr, sizeof(sockaddr)) != 0)
 		HandleError("Failed to bind socket.");
 
-	result = listen(listenSock, MaxConnections);
-	if (result != 0)
+	if (listen(listenSock, MaxConnections) != 0)
 		HandleError("Failed to listen.");
 
 	int count = 0;
 
-	while (clients.size() < MaxConnections)
-	{
-		Client client;
-		client.sock = accept(listenSock, reinterpret_cast<sockaddr*>(&client.addr), NULL);
+	while (true)
+		if (clients.size() < MaxConnections)
+		{
+			Client client;
+			client.sock = accept(listenSock, reinterpret_cast<sockaddr*>(&client.addr), NULL);
 
-		char name[ClientNameSize];
-		recv(client.sock, name, ClientNameSize, NULL);
-		client.name = name;
-		client.ID = count++;
-		client.isConnected = true;
-		clients.push_back(client);
-		std::cout << client.name << " has been connected." << std::endl;
-		new std::thread(HandleClient, client);
-	}
+			char name[ClientNameSize], clientIP[16];
+			recv(client.sock, name, ClientNameSize, NULL);
+			client.name = name;
+			client.ID = count++;
+			client.isConnected = true;
+			clients.push_back(client);
+			std::cout << client.name << " has been connected." << std::endl;
+			inet_ntop(AF_INET, &client.addr, clientIP, 16);
+			std::cout << "IP address: " << clientIP << std::endl;
+
+			std::string tempMsg = client.name + " joined chat.";
+			for (auto x : clients)
+				if (client.ID != x.ID)
+					send(x.sock, tempMsg.c_str(), MessageSize, NULL);
+
+			new std::thread(HandleClient, client);
+		}
 
 	system("pause");
 	WSACleanup();
@@ -94,25 +100,32 @@ void HandleError(std::string message)
 void HandleClient(Client client)
 {
 	char message[MessageSize];
-	int result = 0;
+	std::string tempMsg;
 	while (client.isConnected)
 	{
-		result = recv(client.sock, message, MessageSize, NULL);
+		if (recv(client.sock, message, MessageSize, NULL) != SOCKET_ERROR)
+		{
+			std::cout << client.name << ": " << message << std::endl;
 
-		if (result == SOCKET_ERROR)
-			client.isConnected = false;
+			if (strcmp(message, "exit") == 0)
+				client.isConnected = false;
 
-		if (strcmp(message, "exit") == 0)
-			client.isConnected = false;
+			tempMsg = client.name + ": " + message;
 
-		if (client.isConnected)
 			for (auto x : clients)
 				if (client.ID != x.ID)
-					send(x.sock, message, MessageSize, NULL);
-
+					send(x.sock, tempMsg.c_str(), MessageSize, NULL);
+		}
+		else
+			client.isConnected = false;
 	}
 
 	std::cout << client.name << " left the chat." << std::endl;
 	clients.remove(client);
+
+	tempMsg = client.name + " left the chat.";
+	for (auto x : clients)
+		send(x.sock, tempMsg.c_str(), MessageSize, NULL);
+
 	closesocket(client.sock);
 }

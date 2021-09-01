@@ -45,6 +45,7 @@ int main()
 	}
 
 	closesocket(sock);
+	thread.join();
 
 	WSACleanup();
 	return 0;
@@ -70,11 +71,12 @@ void HandleError(std::string message)
 void HandleIncomingMsg(SOCKET sock)
 {
 	char message[MessageSize];
-	int result = 0;
-	while (result != SOCKET_ERROR)
+	bool isConnected = true;
+	while (isConnected)
 	{
-		result = recv(sock, message, MessageSize, NULL);
-		if (result != SOCKET_ERROR)
+		if (recv(sock, message, MessageSize, NULL) != SOCKET_ERROR)
 			std::cout << message << std::endl;
+		else
+			isConnected = false;
 	}
 }
