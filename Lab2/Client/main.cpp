@@ -3,8 +3,9 @@
 #include <WinSock2.h>
 #include <WS2tcpip.h>
 
-const int BuffSize = 256;
+const int BuffSize = 8192;
 
+// Создание адреса
 sockaddr CreateAddress(std::string ip, uint16_t port)
 {
 	sockaddr_in addr;
@@ -15,32 +16,55 @@ sockaddr CreateAddress(std::string ip, uint16_t port)
 	return *reinterpret_cast<sockaddr*>(&addr);
 }
 
-void HandleError(std::string message)
+// Вывод ошибок
+void HandleError(std::string msg)
 {
-	std::cout << "ERROR. " << message << std::endl;
+	std::cout << "ERROR! " << msg << std::endl;
 	system("pause");
-	exit(1);
+	exit(EXIT_FAILURE);
 }
 
 int main()
 {
+	// Инициализация библиотки
 	WSAData wsaData;
-
 	if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
 		HandleError("Failed to initialize library.");
 
+	// Создание сокета
 	SOCKET sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	sockaddr addr = CreateAddress("127.0.0.1", 4790);
+
+	// Соединение с сервером
+	std::string IP;
+	std::cout << "IP > ";
+	std::cin >> IP;
+	sockaddr addr = CreateAddress(IP, 2005);
 
 	if (connect(sock, &addr, sizeof(sockaddr)) != 0)
 		HandleError("Failed to connect to server.");
+	
+	std::cout << "Connected to server successfully." << std::endl;
 
-	char data[] = "Hello from client!";
+	// Отправка информации
+	char data[BuffSize];
+	std::cout << "Type directory name: ";
+	std::cin >> data;
+
 	if (send(sock, data, BuffSize, NULL) == SOCKET_ERROR)
 		HandleError("Failed to send data.");
 	
+	std::cout << "Type string: ";
+	std::cin >> data;
+
+	if (send(sock, data, BuffSize, NULL) == SOCKET_ERROR)
+		HandleError("Failed to send data.");
+
+	// Получение результата с сервера
 	if (recv(sock, data, BuffSize, NULL) == SOCKET_ERROR)
 		HandleError("Failed to receive data from server.");
+
+	std::cout << "Data from server:" << std::endl;
+	std::cout << data << std::endl;
 
 	closesocket(sock);
 
