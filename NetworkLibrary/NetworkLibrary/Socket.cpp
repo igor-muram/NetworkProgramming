@@ -178,8 +178,8 @@ namespace Net
 
 	Result Socket::Send(Packet& packet)
 	{
-		uint32_t encodedPacketSize = htonl(packet.buffer.size());
-		Result result = SendAll(&encodedPacketSize, sizeof(uint32_t));
+		uint16_t encodedPacketSize = htons(packet.buffer.size());
+		Result result = SendAll(&encodedPacketSize, sizeof(uint16_t));
 		if (result != Result::Success)
 			return Result::GenericError;
 
@@ -195,12 +195,16 @@ namespace Net
 	{
 		packet.Clear();
 
-		uint32_t encodedSize = 0;
-		Result result = RecvAll(&encodedSize, sizeof(uint32_t));
+		uint16_t encodedSize = 0;
+		Result result = RecvAll(&encodedSize, sizeof(uint16_t));
 		if (result != Result::Success)
 			return Result::GenericError;
 
-		uint32_t bufferSize = ntohl(encodedSize);
+		uint16_t bufferSize = ntohs(encodedSize);
+		
+		if (bufferSize > maxPacketSize)
+			return Result::GenericError;
+
 		packet.buffer.resize(bufferSize);
 		result = RecvAll(&packet.buffer[0], bufferSize);
 		if (result != Result::Success)

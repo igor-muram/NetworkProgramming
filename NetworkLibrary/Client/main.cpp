@@ -26,14 +26,24 @@ int main()
 		std::cout << "Failed to connect to server." << std::endl;
 
 
-	Net::Packet packet;
-	packet << "String1";
-	packet << "String2";
+	Net::Packet stringPacket(Net::PacketType::ChatMessage);
+	stringPacket << "This is my string packet.";
+
+	Net::Packet integersPacket(Net::PacketType::IntegerArray);
+	uint32_t arraySize = 6;
+	uint32_t integerArray[6] = { 2, 5, 7, 1, 3, 5 };
+	integersPacket << arraySize;
+	for (auto integer : integerArray)
+		integersPacket << integer;
 		
 	Net::Result result = Net::Result::Success;
 	while (result == Net::Result::Success)
 	{
-		result = socket.Send(packet);
+		if (rand() % 2 == 0)
+			result = socket.Send(stringPacket);
+		else
+			result = socket.Send(integersPacket);
+
 		Sleep(2000);
 	}
 

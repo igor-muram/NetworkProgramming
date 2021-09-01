@@ -1,6 +1,38 @@
 // Server code
 #include <iostream>
+#include <string>
 #include <NetworkLibrary/IncludeMe.h>
+
+bool ProcessPacket(Net::Packet& packet)
+{
+	switch (packet.GetPacketType())
+	{
+	case Net::PacketType::ChatMessage:
+	{
+		std::string chatMessage;
+		packet >> chatMessage;
+		std::cout << "Chat Message: " << chatMessage << std::endl;
+		break;
+	}
+	case Net::PacketType::IntegerArray:
+	{
+		uint32_t arraySize = 0;
+		packet >> arraySize;
+		std::cout << "Array Size: " << arraySize << std::endl;
+		for (int i = 0; i < arraySize; i++)
+		{
+			uint32_t element = 0;
+			packet >> element;
+			std::cout << "Element[" << i << "] - " << element << std::endl;
+		}
+		break;
+	}
+	default:
+		return false;
+	}
+
+	return true;
+}
 
 int main()
 {
@@ -37,21 +69,15 @@ int main()
 	else
 		std::cout << "Failed to accept new connection." << std::endl;
 
-	std::string buffer1 = "";
-	std::string buffer2 = "";
-	Net::Result result = Net::Result::Success;
-
 	Net::Packet packet;
 
+	Net::Result result = Net::Result::Success;
 	while (result == Net::Result::Success)
 	{
 		result = newConnection.Recv(packet);
 
-		if (result == Net::Result::Success)
-		{
-			packet >> buffer1 >> buffer2;
-			std::cout << buffer1 << " " << buffer2 << std::endl;
-		}
+		if (!ProcessPacket(packet))
+			result = Net::Result::GenericError;
 	}
 
 	newConnection.Close();

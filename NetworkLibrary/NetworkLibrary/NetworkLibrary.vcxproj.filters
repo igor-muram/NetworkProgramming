@@ -45,6 +45,12 @@
     <ClInclude Include="Packet.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
+    <ClInclude Include="PacketException.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="PacketType.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Network.cpp">
@@ -57,6 +63,9 @@
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="Packet.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="PacketException.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>
