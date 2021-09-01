@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <thread>
+#include <cstring>
 #include <WinSock2.h>
 #include <WS2tcpip.h>
 
@@ -14,37 +15,38 @@ void HandleError(std::string message);
 int main()
 {
 	WSAData wsaData;
-	int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
-	if (result != 0)
+	if(WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
 		HandleError("Failed to initialize library.");
 
 	SOCKET sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	sockaddr addr = CreateAddress("127.0.0.1", 4790);
 
-	result = connect(sock, &addr, sizeof(sockaddr));
-	if (result != 0)
+	if (connect(sock, &addr, sizeof(sockaddr)) != 0)
 		HandleError("Failed to connect to server.");
 
 	char name[ClientNameSize];
 	std::cout << "Enter your name: ";
 	std::cin >> name;
 
-	result = send(sock, name, ClientNameSize, NULL);
-	if (result == SOCKET_ERROR)
+	if (send(sock, name, ClientNameSize, NULL) == SOCKET_ERROR)
 		HandleError("Failed to send data to server.");
 
 	char message[MessageSize];
 	std::thread thread(HandleIncomingMsg, sock);
-	while (result != SOCKET_ERROR)
+	bool isConnected = true;
+	while (isConnected)
 	{
 		std::cin >> message;
-		result = send(sock, message, MessageSize, NULL);
+		if (send(sock, message, MessageSize, NULL) == SOCKET_ERROR)
+			isConnected = false;
+
+		if (strcmp(message, "exit") == 0)
+			isConnected = false;
 	}
 
 	closesocket(sock);
 
 	WSACleanup();
-	system("pause");
 	return 0;
 }
 
@@ -68,6 +70,11 @@ void HandleError(std::string message)
 void HandleIncomingMsg(SOCKET sock)
 {
 	char message[MessageSize];
-	recv(sock, message, MessageSize, NULL);
-	std::cout << message << std::endl;
+	int result = 0;
+	while (result != SOCKET_ERROR)
+	{
+		result = recv(sock, message, MessageSize, NULL);
+		if (result != SOCKET_ERROR)
+			std::cout << message << std::endl;
+	}
 }

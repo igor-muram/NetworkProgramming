@@ -1,29 +1,34 @@
 #include <iostream>
 #include <string>
 #include <thread>
+#include <list>
+#include <cstring>
 #include <WinSock2.h>
 #include <WS2tcpip.h>
 
-const int MaxConnections = 50;
+const int MaxConnections = 20;
 const int ClientNameSize = 20;
 const int MessageSize = 512;
 
-int count = 0;
-
 struct Client
 {
-	char name[ClientNameSize];
+	std::string name;
+	int ID;
+	sockaddr_in addr;
 	SOCKET sock;
-	sockaddr addr;
 	bool isConnected;
+
+	bool operator==(Client client)
+	{
+		return ID = client.ID;
+	}
 };
 
-Client clients[MaxConnections];
-std::thread clientThreads[MaxConnections];
+std::list<Client> clients;
 
 sockaddr CreateAddress(std::string ip, uint16_t port);
 void HandleError(std::string message);
-void HandleClient(int clientID);
+void HandleClient(Client client);
 
 int main()
 {
@@ -36,7 +41,7 @@ int main()
 	if (listenSock == INVALID_SOCKET)
 		HandleError("Failed to create socket.");
 
-	sockaddr addr = CreateAddress("127.0.0.1", 4790);
+	sockaddr addr = CreateAddress("192.168.0.11", 4790);
 
 	result = bind(listenSock, &addr, sizeof(sockaddr));
 	if (result != 0)
@@ -46,23 +51,25 @@ int main()
 	if (result != 0)
 		HandleError("Failed to listen.");
 
-	for (int i = 0; i < MaxConnections; i++)
+	int count = 0;
+
+	while (clients.size() < MaxConnections)
 	{
-		clients[i].sock = accept(listenSock, &clients[i].addr, NULL);
-		int result = recv(clients[i].sock, clients[i].name, ClientNameSize, NULL);
-		if (result == SOCKET_ERROR)
-			HandleError("Failed to receive client name.");
+		Client client;
+		client.sock = accept(listenSock, reinterpret_cast<sockaddr*>(&client.addr), NULL);
 
-		std::cout << clients[i].name << " has been connected." << std::endl;
-		std::cout << "IP address: " << std::endl;
-
-		clients[i].isConnected = true;
-		new std::thread(HandleClient, i);
-		count++;
+		char name[ClientNameSize];
+		recv(client.sock, name, ClientNameSize, NULL);
+		client.name = name;
+		client.ID = count++;
+		client.isConnected = true;
+		clients.push_back(client);
+		std::cout << client.name << " has been connected." << std::endl;
+		new std::thread(HandleClient, client);
 	}
 
-	WSACleanup();
 	system("pause");
+	WSACleanup();
 	return 0;
 }
 
@@ -79,21 +86,33 @@ sockaddr CreateAddress(std::string ip, uint16_t port)
 void HandleError(std::string message)
 {
 	std::cout << "ERROR. " << message << std::endl;
+	WSACleanup();
 	system("pause");
 	exit(1);
 }
 
-void HandleClient(int clientID)
+void HandleClient(Client client)
 {
 	char message[MessageSize];
-	while (clients[clientID].isConnected)
+	int result = 0;
+	while (client.isConnected)
 	{
-		int result = recv(clients[clientID].sock, message, MessageSize, NULL);
-		if (result == SOCKET_ERROR)
-			clients[clientID].isConnected = false;
+		result = recv(client.sock, message, MessageSize, NULL);
 
-		for (int i = 0; i < count; i++)
-			if (i != clientID)
-				int result = send(clients[i].sock, message, MessageSize, NULL);
+		if (result == SOCKET_ERROR)
+			client.isConnected = false;
+
+		if (strcmp(message, "exit") == 0)
+			client.isConnected = false;
+
+		if (client.isConnected)
+			for (auto x : clients)
+				if (client.ID != x.ID)
+					send(x.sock, message, MessageSize, NULL);
+
 	}
+
+	std::cout << client.name << " left the chat." << std::endl;
+	clients.remove(client);
+	closesocket(client.sock);
 }
