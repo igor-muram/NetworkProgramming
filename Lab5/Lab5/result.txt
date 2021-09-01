@@ -1,0 +1,106 @@
+size of file: 1108 bytes
+
+frame ¹: 1
+Destination MAC: 00:90:27:A1:36:D0
+Source MAC:      00:02:16:09:FA:40
+Frame type:      IPv4
+Source IP:       81.181.78.206
+Destination IP:  195.62.2.11
+----------------------------------
+
+frame ¹: 2
+Destination MAC: 00:02:16:09:FA:40
+Source MAC:      00:90:27:A1:36:D0
+Frame type:      IPv4
+Source IP:       195.62.2.11
+Destination IP:  81.181.78.206
+----------------------------------
+
+frame ¹: 3
+Destination MAC: 01:80:C2:00:00:00
+Source MAC:      00:04:4D:8A:B0:D5
+Frame type:      802.3/LLC
+----------------------------------
+
+frame ¹: 4
+Destination MAC: 00:90:27:A1:36:D0
+Source MAC:      00:02:16:09:FA:40
+Frame type:      IPv4
+Source IP:       81.181.78.206
+Destination IP:  195.62.2.11
+----------------------------------
+
+frame ¹: 5
+Destination MAC: 00:02:16:09:FA:40
+Source MAC:      00:90:27:A1:36:D0
+Frame type:      IPv4
+Source IP:       195.62.2.11
+Destination IP:  81.181.78.206
+----------------------------------
+
+frame ¹: 6
+Destination MAC: 01:80:C2:00:00:00
+Source MAC:      00:04:4D:8A:B0:C3
+Frame type:      802.3/LLC
+----------------------------------
+
+frame ¹: 7
+Destination MAC: 01:80:C2:00:00:00
+Source MAC:      00:04:4D:8A:B0:C4
+Frame type:      802.3/LLC
+----------------------------------
+
+frame ¹: 8
+Destination MAC: 01:80:C2:00:00:00
+Source MAC:      00:04:4D:8A:B0:C5
+Frame type:      802.3/LLC
+----------------------------------
+
+frame ¹: 9
+Destination MAC: 01:80:C2:00:00:00
+Source MAC:      00:04:4D:8A:B0:C8
+Frame type:      802.3/LLC
+----------------------------------
+
+frame ¹: 10
+Destination MAC: 01:80:C2:00:00:00
+Source MAC:      00:04:4D:8A:B0:C9
+Frame type:      802.3/LLC
+----------------------------------
+
+frame ¹: 11
+Destination MAC: 01:80:C2:00:00:00
+Source MAC:      00:04:4D:8A:B0:CA
+Frame type:      802.3/LLC
+----------------------------------
+
+frame ¹: 12
+Destination MAC: 01:80:C2:00:00:00
+Source MAC:      00:04:4D:8A:B0:CB
+Frame type:      802.3/LLC
+----------------------------------
+
+frame ¹: 13
+Destination MAC: 01:80:C2:00:00:00
+Source MAC:      00:04:4D:8A:B0:CC
+Frame type:      802.3/LLC
+----------------------------------
+
+frame ¹: 14
+Destination MAC: 01:80:C2:00:00:00
+Source MAC:      00:04:4D:8A:B0:CE
+Frame type:      802.3/LLC
+----------------------------------
+
+frame ¹: 15
+Destination MAC: 01:80:C2:00:00:00
+Source MAC:      00:04:4D:8A:B0:CF
+Frame type:      802.3/LLC
+----------------------------------
+
+Frames:                            15
+IPv4 frames:                       4
+Ethernet DIX (Ethernet II) frames: 0
+Raw 802.3 (Novell 802.3) frames:   0
+Ethernet SNAP frames:              0
+802.3/LLC frames:                  11
