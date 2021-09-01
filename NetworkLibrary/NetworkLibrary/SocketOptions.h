@@ -4,6 +4,7 @@ namespace Net
 {
 	enum SocketOption
 	{
-		TCP_NoDelay
+		TCP_NoDelay,
+		IPv6_Only
 	};
 }

@@ -42,8 +42,8 @@ int main()
 		return 1;
 	}
 
-	Net::IPEndPoint test("0.0.0.0", 4790);
-	Net::Socket socket;
+	Net::IPEndPoint test("::", 4790);
+	Net::Socket socket(Net::IPVersion::IPv6);
 
 	if (socket.Create() == Net::Result::Success)
 		std::cout << "Socket created successfully." << std::endl;

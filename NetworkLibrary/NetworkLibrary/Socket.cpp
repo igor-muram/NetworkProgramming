@@ -5,17 +5,17 @@ namespace Net
 	Net::Socket::Socket(IPVersion ipversion, SocketHandle handle)
 		: ipversion(ipversion), handle(handle)
 	{
-		assert(ipversion == IPVersion::IPv4);
+		assert(ipversion == IPVersion::IPv4 || ipversion == IPVersion::IPv6);
 	}
 
 	Result Net::Socket::Create()
 	{
-		assert(ipversion == IPVersion::IPv4);
+		assert(ipversion == IPVersion::IPv4 || ipversion == IPVersion::IPv6);
 
 		if (handle != INVALID_SOCKET)
 			return Result::GenericError;
 
-		handle = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+		handle = socket(ipversion == IPVersion::IPv4 ? AF_INET : AF_INET6, SOCK_STREAM, IPPROTO_TCP);
 
 		if (handle == INVALID_SOCKET)
 		{
@@ -48,12 +48,27 @@ namespace Net
 
 	Result Socket::Bind(IPEndPoint endpoint)
 	{
-		sockaddr_in addr = endpoint.GetSockaddrIPv4();
-		int result = bind(handle, reinterpret_cast<sockaddr*>(&addr), sizeof(sockaddr_in));
-		if (result != 0)
+		assert(ipversion == endpoint.GetIPVersion());
+
+		if (ipversion == IPVersion::IPv4)
 		{
-			int error = WSAGetLastError();
-			return Result::GenericError;
+			sockaddr_in addr = endpoint.GetSockaddrIPv4();
+			int result = bind(handle, reinterpret_cast<sockaddr*>(&addr), sizeof(sockaddr_in));
+			if (result != 0)
+			{
+				int error = WSAGetLastError();
+				return Result::GenericError;
+			}
+		}
+		else
+		{
+			sockaddr_in6 addr = endpoint.GetSockaddrIPv6();
+			int result = bind(handle, reinterpret_cast<sockaddr*>(&addr), sizeof(sockaddr_in6));
+			if (result != 0)
+			{
+				int error = WSAGetLastError();
+				return Result::GenericError;
+			}
 		}
 
 		return Result::Success;
@@ -61,6 +76,10 @@ namespace Net
 
 	Result Socket::Listen(IPEndPoint endpoint, int backlog)
 	{
+		if (ipversion == IPVersion::IPv6)
+			if (SetSocketOption(SocketOption::IPv6_Only, FALSE) != Result::Success)
+				return Result::GenericError;
+
 		if (Bind(endpoint) != Result::Success)
 			return Result::GenericError;
 
@@ -77,33 +96,70 @@ namespace Net
 
 	Result Socket::Accept(Socket& outSocket)
 	{
-		sockaddr_in addr = {};
-		int len = sizeof(sockaddr_in);
+		assert(ipversion == IPVersion::IPv4 || ipversion == IPVersion::IPv6);
 
-		SocketHandle acceptedConnectionHandle = accept(handle, reinterpret_cast<sockaddr*>(&addr), &len);
-		if (acceptedConnectionHandle == INVALID_SOCKET)
+		if (ipversion == IPVersion::IPv4)
 		{
-			int error = WSAGetLastError();
-			return Result::GenericError;
-		}
-		IPEndPoint newConnectionEndPoint(reinterpret_cast<sockaddr*>(&addr));
-		std::cout << "New connection accepted!" << std::endl;
-		newConnectionEndPoint.Print();
+			sockaddr_in addr = {};
+			int len = sizeof(sockaddr_in);
 
-		outSocket = Socket(IPVersion::IPv4, acceptedConnectionHandle);
+			SocketHandle acceptedConnectionHandle = accept(handle, reinterpret_cast<sockaddr*>(&addr), &len);
+			if (acceptedConnectionHandle == INVALID_SOCKET)
+			{
+				int error = WSAGetLastError();
+				return Result::GenericError;
+			}
+			IPEndPoint newConnectionEndPoint(reinterpret_cast<sockaddr*>(&addr));
+			std::cout << "New connection accepted!" << std::endl;
+			newConnectionEndPoint.Print();
+
+			outSocket = Socket(IPVersion::IPv4, acceptedConnectionHandle);
+		}
+		else
+		{
+			sockaddr_in6 addr = {};
+			int len = sizeof(sockaddr_in6);
+
+			SocketHandle acceptedConnectionHandle = accept(handle, reinterpret_cast<sockaddr*>(&addr), &len);
+			if (acceptedConnectionHandle == INVALID_SOCKET)
+			{
+				int error = WSAGetLastError();
+				return Result::GenericError;
+			}
+			IPEndPoint newConnectionEndPoint(reinterpret_cast<sockaddr*>(&addr));
+			std::cout << "New connection accepted!" << std::endl;
+			newConnectionEndPoint.Print();
+
+			outSocket = Socket(IPVersion::IPv6, acceptedConnectionHandle);
+		}
+
 		return Result::Success;
 	}
 
 	Result Socket::Connect(IPEndPoint endpoint)
 	{
-		sockaddr_in addr = endpoint.GetSockaddrIPv4();
+		assert(ipversion == endpoint.GetIPVersion());
 
-		int result = connect(handle, reinterpret_cast<sockaddr*>(&addr), sizeof(sockaddr_in));
-
-		if (result != 0)
+		int result = 0;
+		if (ipversion == IPVersion::IPv4)
 		{
-			int error = WSAGetLastError();
-			return Result::GenericError;
+			sockaddr_in addr = endpoint.GetSockaddrIPv4();
+			result = connect(handle, reinterpret_cast<sockaddr*>(&addr), sizeof(sockaddr_in));
+			if (result != 0)
+			{
+				int error = WSAGetLastError();
+				return Result::GenericError;
+			}
+		}
+		else
+		{
+			sockaddr_in6 addr = endpoint.GetSockaddrIPv6();
+			result = connect(handle, reinterpret_cast<sockaddr*>(&addr), sizeof(sockaddr_in6));
+			if (result != 0)
+			{
+				int error = WSAGetLastError();
+				return Result::GenericError;
+			}
 		}
 
 		return Result::Success;
@@ -231,6 +287,9 @@ namespace Net
 		{
 		case SocketOption::TCP_NoDelay:
 			result = setsockopt(handle, IPPROTO_TCP, TCP_NODELAY, reinterpret_cast<const char*>(&value), sizeof(value));
+			break;
+		case SocketOption::IPv6_Only:
+			result = setsockopt(handle, IPPROTO_IPV6, IPV6_V6ONLY, reinterpret_cast<const char*>(&value), sizeof(value));
 			break;
 		default:
 			return Result::GenericError;
