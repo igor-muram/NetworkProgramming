@@ -12,7 +12,7 @@
 
 using namespace std;
 
-const int MaxConnections = 100;
+const int MaxConnections = 5;
 const int MsgSize = 8192;
 
 struct Client
@@ -38,4 +38,3 @@ void HandleClient(Client client);						// Обработка клиента
 void HandleClientMessage(Client& client, string msg);	// Обработка сообщения клиента
 void ClientDisconnect(Client& client);					// Отключение клиента от сервера
 sockaddr CreateAddress(std::string ip, uint16_t port);	// Создание адреса
-void HandleError(std::string message);					// Вывод ошибок

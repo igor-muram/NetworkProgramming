@@ -2,7 +2,6 @@
 #include <iostream>
 #include <string>
 #include <thread>
-#include <utility>
 #include <cstring>
 #include <mutex>
 #include <WinSock2.h>
@@ -16,5 +15,4 @@ bool ConnectToServer(SOCKET& sock, sockaddr& addr);		// Подключение к серверу
 bool IsConnected();										// Проверка подключения к серверу
 void HandleIncomingMsg(SOCKET& sock);					// Обработка сообщений, приходящих с сервера
 void HandleSendingMsg(SOCKET& sock);					// Отправка сообщений
-sockaddr CreateAddress(std::string ip, uint16_t port);	// Создание адреса
-void HandleError(std::string message);					// Вывод ошибок
+sockaddr CreateAddress(string ip, uint16_t port);		// Создание адреса

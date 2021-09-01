@@ -43,7 +43,8 @@ void HandleIncomingMsg(SOCKET& sock)
 	{
 		if (recv(sock, message, MsgSize, NULL) != SOCKET_ERROR)
 		{
-			cout << message << endl;
+			if (Connected)
+				cout << message << endl;
 		}
 		else
 		{
@@ -67,7 +68,7 @@ void HandleSendingMsg(SOCKET& sock)
 	}
 }
 
-sockaddr CreateAddress(std::string ip, uint16_t port)
+sockaddr CreateAddress(string ip, uint16_t port)
 {
 	sockaddr_in addr;
 	addr.sin_family = AF_INET;
@@ -75,11 +76,4 @@ sockaddr CreateAddress(std::string ip, uint16_t port)
 	inet_pton(AF_INET, ip.c_str(), &addr.sin_addr);
 
 	return *reinterpret_cast<sockaddr*>(&addr);
-}
-
-void HandleError(std::string message)
-{
-	std::cout << "ERROR. " << message << std::endl;
-	system("pause");
-	exit(1);
 }

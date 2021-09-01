@@ -51,7 +51,7 @@ void AcceptClient(Client& client)
 	char name[MsgSize];
 	recv(client.sock, name, MsgSize, NULL);
 	client.name = name;
-	client.ID = ClientIDCount;
+	client.ID = ClientIDCount++;
 	client.isConnected = true;
 	clients.push_back(client);
 
@@ -65,10 +65,12 @@ void AcceptClient(Client& client)
 	cout << "IP address: " << clientIP << endl;
 
 	// Оповещение других клиентов о новом клиенте
-	std::string tempMsg = client.name + " joined chat.";
+	string tempMsg = client.name + " joined chat. IP: " + clientIP;
 	for (auto x : clients)
 		if (client.ID != x.ID)
 			send(x.sock, tempMsg.c_str(), MsgSize, NULL);
+
+	cout << "Current amount of clients: " << GetClientCount() << endl << endl;
 
 	// Создание отдельного потока для обработки клиента
 	new thread(HandleClient, client);
@@ -107,9 +109,9 @@ void HandleClientMessage(Client& client, string msg)
 	
 	// Вывод сообщения на сервере
 	msg = client.name + ": " + msg;
-	//Mutex.lock();
+	Mutex.lock();
 	cout << msg << endl;
-	//Mutex.unlock();
+	Mutex.unlock();
 
 	// Рассылка сообщения всем остальным клиентам
 	for (auto x : clients)
@@ -141,12 +143,4 @@ sockaddr CreateAddress(string ip, uint16_t port)
 	inet_pton(AF_INET, ip.c_str(), &addr.sin_addr);
 
 	return *reinterpret_cast<sockaddr*>(&addr);
-}
-
-void HandleError(string message)
-{
-	cout << "ERROR. " << message << endl;
-	WSACleanup();
-	system("pause");
-	exit(1);
 }

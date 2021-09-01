@@ -5,7 +5,10 @@ int main()
 	// Инициализация библиотеки
 	WSAData wsaData;
 	if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
-		HandleError("Failed to initialize library.");
+	{
+		cout << "Failed to initialize library.\n";
+		return -1;
+	}
 
 	// Создание сокета
 	SOCKET sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -29,10 +32,9 @@ int main()
 	}
 	else
 		cout << "Connection to server rejected. Too many clients.\n";
-
-	cout << WSAGetLastError();
 		
 	closesocket(sock);
 	WSACleanup();
+	system("pause");
 	return 0;
 }
