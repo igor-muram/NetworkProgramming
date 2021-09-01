@@ -37,16 +37,21 @@ int main()
 	else
 		std::cout << "Failed to accept new connection." << std::endl;
 
-	char buffer[256];
-	int bytesReceived = 0;
+	std::string buffer1 = "";
+	std::string buffer2 = "";
 	Net::Result result = Net::Result::Success;
+
+	Net::Packet packet;
 
 	while (result == Net::Result::Success)
 	{
-		result = newConnection.Recv(buffer, sizeof(buffer), bytesReceived);
-		
+		result = newConnection.Recv(packet);
+
 		if (result == Net::Result::Success)
-			std::cout << buffer << std::endl;
+		{
+			packet >> buffer1 >> buffer2;
+			std::cout << buffer1 << " " << buffer2 << std::endl;
+		}
 	}
 
 	newConnection.Close();

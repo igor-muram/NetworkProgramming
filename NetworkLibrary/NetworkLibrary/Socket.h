@@ -6,6 +6,8 @@
 #include "IPVersion.h"
 #include "SocketOptions.h"
 #include "IPEndPoint.h"
+#include "Constants.h"
+#include "Packet.h"
 
 namespace Net
 {
@@ -19,8 +21,12 @@ namespace Net
 		Result Listen(IPEndPoint endpoint, int backlog = 5);
 		Result Accept(Socket &outSocket);
 		Result Connect(IPEndPoint endpoint);
-		Result Send(void* data, int numberOfBytes, int& bytesSent);
+		Result Send(const void* data, int numberOfBytes, int& bytesSent);
 		Result Recv(void* destination, int numberOfBytes, int& bytesReceived);
+		Result SendAll(const void* data, int numberOfBytes);
+		Result RecvAll(void* destination, int numberOfBytes);
+		Result Send(Packet& packet);
+		Result Recv(Packet& packet);
 		SocketHandle GetHandle();
 		IPVersion GetIPVersion();
 

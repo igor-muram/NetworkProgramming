@@ -25,15 +25,16 @@ int main()
 	else
 		std::cout << "Failed to connect to server." << std::endl;
 
-	char buffer[256] = "Hello world from client!";
-	int bytesSent = 0;
 
+	Net::Packet packet;
+	packet << "String1";
+	packet << "String2";
+		
 	Net::Result result = Net::Result::Success;
 	while (result == Net::Result::Success)
 	{
-		result = socket.Send(buffer, sizeof(buffer), bytesSent);
-		std::cout << "Attempting to send chunk of data..." << std::endl;
-		Sleep(500);
+		result = socket.Send(packet);
+		Sleep(2000);
 	}
 
 	Net::Network::Shutdown();

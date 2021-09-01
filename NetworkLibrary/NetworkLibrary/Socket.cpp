@@ -13,18 +13,18 @@ namespace Net
 		assert(ipversion == IPVersion::IPv4);
 
 		if (handle != INVALID_SOCKET)
-			return Result::NotYetImplemented;
+			return Result::GenericError;
 
 		handle = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 
 		if (handle == INVALID_SOCKET)
 		{
 			int error = WSAGetLastError();
-			return Result::NotYetImplemented;
+			return Result::GenericError;
 		}
 
 		if (SetSocketOption(SocketOption::TCP_NoDelay, TRUE) != Result::Success)
-			return Result::NotYetImplemented;
+			return Result::GenericError;
 
 		return Result::Success;
 	}
@@ -32,14 +32,14 @@ namespace Net
 	Result Net::Socket::Close()
 	{
 		if (handle == INVALID_SOCKET)
-			return Result::NotYetImplemented;
+			return Result::GenericError;
 
 		int result = closesocket(handle);
 
 		if (result != 0)
 		{
 			int error = WSAGetLastError();
-			return Result::NotYetImplemented;
+			return Result::GenericError;
 		}
 
 		handle = INVALID_SOCKET;
@@ -53,7 +53,7 @@ namespace Net
 		if (result != 0)
 		{
 			int error = WSAGetLastError();
-			return Result::NotYetImplemented;
+			return Result::GenericError;
 		}
 
 		return Result::Success;
@@ -62,14 +62,14 @@ namespace Net
 	Result Socket::Listen(IPEndPoint endpoint, int backlog)
 	{
 		if (Bind(endpoint) != Result::Success)
-			return Result::NotYetImplemented;
+			return Result::GenericError;
 
 		int result = listen(handle, backlog);
 
 		if (result != 0)
 		{
 			int error = WSAGetLastError();
-			return Result::NotYetImplemented;
+			return Result::GenericError;
 		}
 
 		return Result::Success;
@@ -84,7 +84,7 @@ namespace Net
 		if (acceptedConnectionHandle == INVALID_SOCKET)
 		{
 			int error = WSAGetLastError();
-			return Result::NotYetImplemented;
+			return Result::GenericError;
 		}
 		IPEndPoint newConnectionEndPoint(reinterpret_cast<sockaddr*>(&addr));
 		std::cout << "New connection accepted!" << std::endl;
@@ -103,20 +103,20 @@ namespace Net
 		if (result != 0)
 		{
 			int error = WSAGetLastError();
-			return Result::NotYetImplemented;
+			return Result::GenericError;
 		}
 
 		return Result::Success;
 	}
 
-	Result Socket::Send(void* data, int numberOfBytes, int& bytesSent)
+	Result Socket::Send(const void* data, int numberOfBytes, int& bytesSent)
 	{
 		bytesSent = send(handle, reinterpret_cast<const char*>(data), numberOfBytes, NULL);
 
 		if (bytesSent == SOCKET_ERROR)
 		{
 			int error = WSAGetLastError();
-			return Result::NotYetImplemented;
+			return Result::GenericError;
 		}
 
 		return Result::Success;
@@ -127,13 +127,84 @@ namespace Net
 		bytesReceived = recv(handle, reinterpret_cast<char*>(destination), numberOfBytes, NULL);
 
 		if (bytesReceived == 0)
-			return Result::NotYetImplemented;
+			return Result::GenericError;
 
 		if (bytesReceived == SOCKET_ERROR)
 		{
 			int error = WSAGetLastError();
-			return Result::NotYetImplemented;
+			return Result::GenericError;
 		}
+
+		return Result::Success;
+	}
+
+	Result Socket::SendAll(const void* data, int numberOfBytes)
+	{
+		int totalBytesSent = 0;
+
+		while (totalBytesSent < numberOfBytes)
+		{
+			int bytesRemaining = numberOfBytes - totalBytesSent;
+			int bytesSent = 0;
+			const char* bufferOffset = reinterpret_cast<const char*>(data) + totalBytesSent;
+			Result result = Send(bufferOffset, bytesRemaining, bytesSent);
+
+			if (result != Result::Success)
+				return Result::GenericError;
+
+			totalBytesSent += bytesSent;
+		}
+		return Result::Success;
+	}
+
+	Result Socket::RecvAll(void* destination, int numberOfBytes)
+	{
+		int totalBytesReceived = 0;
+
+		while (totalBytesReceived < numberOfBytes)
+		{
+			int bytesRemaining = numberOfBytes - totalBytesReceived;
+			int bytesReceived = 0;
+			char* bufferOffset = reinterpret_cast<char*>(destination) + totalBytesReceived;
+			Result result = Recv(bufferOffset, bytesRemaining, bytesReceived);
+
+			if (result != Result::Success)
+				return Result::GenericError;
+
+			totalBytesReceived += bytesReceived;
+		}
+		return Result::Success;
+	}
+
+	Result Socket::Send(Packet& packet)
+	{
+		uint32_t encodedPacketSize = htonl(packet.buffer.size());
+		Result result = SendAll(&encodedPacketSize, sizeof(uint32_t));
+		if (result != Result::Success)
+			return Result::GenericError;
+
+		result = SendAll(packet.buffer.data(), packet.buffer.size());
+		if (result != Result::Success)
+			return Result::GenericError;
+
+
+		return Result::Success;
+	}
+
+	Result Socket::Recv(Packet& packet)
+	{
+		packet.Clear();
+
+		uint32_t encodedSize = 0;
+		Result result = RecvAll(&encodedSize, sizeof(uint32_t));
+		if (result != Result::Success)
+			return Result::GenericError;
+
+		uint32_t bufferSize = ntohl(encodedSize);
+		packet.buffer.resize(bufferSize);
+		result = RecvAll(&packet.buffer[0], bufferSize);
+		if (result != Result::Success)
+			return Result::GenericError;
 
 		return Result::Success;
 	}
@@ -158,13 +229,13 @@ namespace Net
 			result = setsockopt(handle, IPPROTO_TCP, TCP_NODELAY, reinterpret_cast<const char*>(&value), sizeof(value));
 			break;
 		default:
-			return Result::NotYetImplemented;
+			return Result::GenericError;
 		}
 
 		if (result != 0)
 		{
 			int error = WSAGetLastError();
-			return Result::NotYetImplemented;
+			return Result::GenericError;
 		}
 
 		return Result::Success;
