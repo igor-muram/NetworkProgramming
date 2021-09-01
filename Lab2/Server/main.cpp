@@ -25,8 +25,7 @@ void HandleError(std::string message)
 int main()
 {
 	WSAData wsaData;
-	int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
-	if (result != 0)
+	if (WSAStartup(MAKEWORD(2, 2), &wsaData); != 0)
 		HandleError("Failed to initialize library.");
 
 	SOCKET listenSock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -35,12 +34,10 @@ int main()
 
 	sockaddr addr = CreateAddress("127.0.0.1", 4790);
 
-	result = bind(listenSock, &addr, sizeof(sockaddr));
-	if (result != 0)
+	if (bind(listenSock, &addr, sizeof(sockaddr)) != 0)
 		HandleError("Failed to bind socket.");
 
-	result = listen(listenSock, 5);
-	if (result != 0)
+	if (listen(listenSock, SOMAXCONN) != 0)
 		HandleError("Failed to listen.");
 		
 	char data[BuffSize];
@@ -48,8 +45,7 @@ int main()
 	{
 		SOCKET clientSock = accept(listenSock, NULL, NULL);
 
-		result = recv(clientSock, data, BuffSize, NULL);
-		if (result == SOCKET_ERROR)
+		if (recv(clientSock, data, BuffSize, NULL); == SOCKET_ERROR)
 			HandleError("Failed to receive data from client.");
 
 		std::cout << "Data from client: " << data << std::endl;
@@ -62,6 +58,7 @@ int main()
 
 		closesocket(clientSock);
 	}
+
 	WSACleanup();
 	system("pause");
 	return 0;
