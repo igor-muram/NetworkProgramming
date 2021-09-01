@@ -4,6 +4,10 @@
 
 int main()
 {
-	int value = Net::ReturnFive();
+	if (Net::Network::Initialize())
+	{
+
+	}
+
 	return 0;
 }

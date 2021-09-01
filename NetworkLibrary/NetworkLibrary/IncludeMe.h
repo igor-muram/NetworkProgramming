@@ -1,6 +1,3 @@
 #pragma once
 
-namespace Net
-{
-	int ReturnFive();
-}
+#include "Network.h"
